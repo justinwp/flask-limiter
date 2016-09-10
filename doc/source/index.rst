@@ -270,38 +270,43 @@ The following flask configuration values are honored by
 
 .. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
 
-===================================== ================================================
-``RATELIMIT_GLOBAL``                  A comma (or some other delimiter) separated string
-                                      that will be used to apply a global limit on all
-                                      routes. If not provided, the global limits can be
-                                      passed to the :class:`Limiter` constructor
-                                      as well (the values passed to the constructor take precedence
-                                      over those in the config). :ref:`ratelimit-string` for details.
-``RATELIMIT_STORAGE_URL``             One of ``memory://`` or ``redis://host:port``
-                                      or ``memcached://host:port``. Using the redis storage
-                                      requires the installation of the `redis`_ package
-                                      while memcached relies on the `pymemcache`_ package.
-                                      (For details refer to :ref:`storage-scheme`)
-``RATELIMIT_STORAGE_OPTIONS``         A dictionary to set extra options to be passed to the
-                                      storage implementation upon initialization. (Useful if you're
-                                      subclassing :class:`limits.storage.Storage` to create a
-                                      custom Storage backend.)
-``RATELIMIT_STRATEGY``                The rate limiting strategy to use.  :ref:`ratelimit-strategy`
-                                      for details.
-``RATELIMIT_HEADERS_ENABLED``         Enables returning :ref:`ratelimit-headers`. Defaults to ``False``
-``RATELIMIT_ENABLED``                 Overall kill switch for rate limits. Defaults to ``True``
-``RATELIMIT_HEADER_LIMIT``            Header for the current rate limit. Defaults to ``X-RateLimit-Limit``
-``RATELIMIT_HEADER_RESET``            Header for the reset time of the current rate limit. Defaults to ``X-RateLimit-Reset``
-``RATELIMIT_HEADER_REMAINING``        Header for the number of requests remaining in the current rate limit. Defaults to ``X-RateLimit-Remaining``
-``RATELIMIT_HEADER_REMAINING``        Header for when the client should retry the request. Defaults to ``Retry-After``
-``RATELIMIT_HEADER_REMAINING_VALUE``  Allows configuration of how the value of the `Retry-After` header is rendered. One of `http-date` or `delta-seconds`. (`RFC2616`_).
-``RATELIMIT_SWALLOW_ERRORS``          Whether to allow failures while attempting to perform a rate limit
-                                      such as errors with downstream storage. Setting this value to ``True``
-                                      will effectively disable rate limiting for requests where an error has
-                                      occurred.
-``RATELIMIT_IN_MEMORY_FALLBACK``      A comma (or some other delimiter) separated string
-                                      that will be used when the configured storage is down.
-===================================== ================================================
+========================================  ================================================
+``RATELIMIT_GLOBAL``                      A comma (or some other delimiter) separated string
+                                          that will be used to apply a global limit on all
+                                          routes. If not provided, the global limits can be
+                                          passed to the :class:`Limiter` constructor
+                                          as well (the values passed to the constructor take precedence
+                                          over those in the config). :ref:`ratelimit-string` for details.
+``RATELIMIT_STORAGE_URL``                 One of ``memory://`` or ``redis://host:port``
+                                          or ``memcached://host:port``. Using the redis storage
+                                          requires the installation of the `redis`_ package
+                                          while memcached relies on the `pymemcache`_ package.
+                                          (For details refer to :ref:`storage-scheme`)
+``RATELIMIT_STORAGE_OPTIONS``             A dictionary to set extra options to be passed to the
+                                          storage implementation upon initialization. (Useful if you're
+                                          subclassing :class:`limits.storage.Storage` to create a
+                                          custom Storage backend.)
+``RATELIMIT_STRATEGY``                    The rate limiting strategy to use.  :ref:`ratelimit-strategy`
+                                          for details.
+``RATELIMIT_HEADERS_ENABLED``             Enables returning :ref:`ratelimit-headers`. Defaults to ``False``
+``RATELIMIT_ENABLED``                     Overall kill switch for rate limits. Defaults to ``True``
+``RATELIMIT_HEADER_LIMIT``                Header for the current rate limit. Defaults to ``X-RateLimit-Limit``
+``RATELIMIT_HEADER_RESET``                Header for the reset time of the current rate limit. Defaults to ``X-RateLimit-Reset``
+``RATELIMIT_HEADER_REMAINING``            Header for the number of requests remaining in the current rate limit. Defaults to ``X-RateLimit-Remaining``
+``RATELIMIT_HEADER_REMAINING``            Header for when the client should retry the request. Defaults to ``Retry-After``
+``RATELIMIT_HEADER_REMAINING_VALUE``      Allows configuration of how the value of the `Retry-After` header is rendered. One of `http-date` or `delta-seconds`. (`RFC2616`_).
+``RATELIMIT_SWALLOW_ERRORS``              Whether to allow failures while attempting to perform a rate limit
+                                          such as errors with downstream storage. Setting this value to ``True``
+                                          will effectively disable rate limiting for requests where an error has
+                                          occurred.
+``RATELIMIT_IN_MEMORY_FALLBACK``          A comma (or some other delimiter) separated string
+                                          that will be used when the configured storage is down.
+``RATELIMIT_IN_MEMORY_FALLBACK_ENABLED``  ``True``/``False``. If enabled an in memory rate limiter will be used
+                                          as a fallback when the configured storage is down. Note that, when used in
+                                          combination with ``RATELIMIT_IN_MEMORY_FALLBACK`` the original rate limits
+                                          will not be inherited and the values provided in ``RATELIMIT_IN_MEMORY_FALLBACK``
+                                          will be applied globally for the duration of the down time.
+========================================  ================================================
 
 .. _ratelimit-string:
 

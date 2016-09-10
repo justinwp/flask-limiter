@@ -30,6 +30,7 @@ class C:
     HEADER_RESET = "RATELIMIT_HEADER_RESET"
     SWALLOW_ERRORS = "RATELIMIT_SWALLOW_ERRORS"
     IN_MEMORY_FALLBACK = "RATELIMIT_IN_MEMORY_FALLBACK"
+    IN_MEMORY_FALLBACK_ENABLED = "RATELIMIT_IN_MEMORY_FALLBACK_ENABLED"
     HEADER_RETRY_AFTER = "RATELIMIT_HEADER_RETRY_AFTER"
     HEADER_RETRY_AFTER_VALUE = "RATELIMIT_HEADER_RETRY_AFTER_VALUE"
 
@@ -86,6 +87,8 @@ class Limiter(object):
      An exception will still be logged. default ``False``
     :param list in_memory_fallback: a variable list of strings denoting fallback
      limits to apply when the storage is down.
+    :param bool in_memory_fallback_enabled: simply falls back to in memory storage
+     then the main storage is down and inherits the original limits.
     """
 
     def __init__(self, app=None
@@ -98,6 +101,7 @@ class Limiter(object):
                  , auto_check=True
                  , swallow_errors=False
                  , in_memory_fallback=[]
+                 , in_memory_fallback_enabled=False
                  , retry_after=None
     ):
         self.app = app
@@ -141,6 +145,7 @@ class Limiter(object):
                     ) for limit in parse_many(limit)
                     ]
             )
+        self._in_memory_fallback_enabled = in_memory_fallback_enabled or len(in_memory_fallback) > 0
         self._route_limits = {}
         self._dynamic_route_limits = {}
         self._blueprint_limits = {}
@@ -204,6 +209,7 @@ class Limiter(object):
                     limit, self._key_func, None, False, None, None, None
                 ) for limit in parse_many(conf_limits)
             ]
+        fallback_enabled = app.config.get(C.IN_MEMORY_FALLBACK_ENABLED, False)
         fallback_limits = app.config.get(C.IN_MEMORY_FALLBACK, None)
         if not self._in_memory_fallback and fallback_limits:
             self._in_memory_fallback = [
@@ -211,11 +217,14 @@ class Limiter(object):
                     limit, self._key_func, None, False, None, None, None
                 ) for limit in parse_many(fallback_limits)
                 ]
+        if not self._in_memory_fallback_enabled:
+            self._in_memory_fallback_enabled = fallback_enabled or len(self._in_memory_fallback) > 0
+
         if self._auto_check:
             app.before_request(self.__check_request_limit)
         app.after_request(self.__inject_headers)
 
-        if self._in_memory_fallback:
+        if self._in_memory_fallback_enabled:
             self._fallback_storage = MemoryStorage()
             self._fallback_limiter = STRATEGIES[strategy](self._fallback_storage)
 
@@ -253,7 +262,7 @@ class Limiter(object):
 
     @property
     def limiter(self):
-        if self._storage_dead and self._in_memory_fallback:
+        if self._storage_dead and self._in_memory_fallback_enabled:
             return self._fallback_limiter
         else:
             return self._limiter
@@ -384,7 +393,7 @@ class Limiter(object):
         except Exception as e: # no qa
             if isinstance(e, RateLimitExceeded):
                 six.reraise(*sys.exc_info())
-            if self._in_memory_fallback and not self._storage_dead:
+            if self._in_memory_fallback_enabled and not self._storage_dead:
                 self.logger.warn(
                     "Rate limit storage unreachable - falling back to"
                     " in-memory storage"
